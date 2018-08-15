@@ -729,11 +729,12 @@ int main (int argc, char* const argv[]) {
 
                 try
                 {
-                    mathmlOutput << L"<markup>\n";
+
+                    mathmlOutput << L"<math xmlns=\"http://www.w3.org/1998/Math/MathML\">\n";
                     mathmlOutput << interface.GetMathml();
                     if (!interface.mIndented)
                         mathmlOutput << L"\n";
-                    mathmlOutput << L"</markup>\n";
+                    mathmlOutput << L"</math>\n";
                 }
 
                 // Catch errors in generating the MathML:
@@ -745,8 +746,7 @@ int main (int argc, char* const argv[]) {
                         << endl;
                 }
 
-                mainOutput << L"<mathml>\n" << mathmlOutput.str()
-                    << L"</mathml>\n";
+                mainOutput << mathmlOutput.str();
             }
         }
 
@@ -763,9 +763,7 @@ int main (int argc, char* const argv[]) {
             mainOutput << FormatError(e, interface.mEncodingOptions) << endl;
         }
 
-        cout << "<blahtex>\n"
-            << gUnicodeConverter.ConvertOut(mainOutput.str())
-            << "</blahtex>\n";
+        cout << gUnicodeConverter.ConvertOut(mainOutput.str());
     }
 
     // The following errors might occur if there's a bug in blahtex that

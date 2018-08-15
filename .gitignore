@@ -1,0 +1,7 @@
+.idea
+.swp
+.swo
+bin-blahtex
+bin-blahtexml
+blahtex*
+*.pyc

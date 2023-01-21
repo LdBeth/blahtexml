@@ -37,12 +37,13 @@ protected:
     PrefixType desiredMathMLPrefixType;
     wstring desiredMathMLPrefix;
     bool annotateTeX;
-    PngParams pngParams;
 public:
     BlahtexFilter(SAX2XMLReader* parent, blahtex::Interface& anInterface);
     ~BlahtexFilter();
     virtual void startElement(const XMLCh* const uri, const XMLCh* const localname,
         const XMLCh* const qname, const Attributes& attributes);
+  virtual void endElement(const XMLCh* const uri, const XMLCh* const localname,
+                          const XMLCh* const qname);
     virtual void startPrefixMapping(const XMLCh* const prefix, const XMLCh* const uri);
     virtual void endPrefixMapping(const XMLCh* const prefix);
     int getNumberOfErrors();
@@ -50,4 +51,7 @@ public:
     void setAnnotateTeX(bool anAnnotateTeX);
 protected:
     bool getMathMLprefix(wstring& prefix);
+private:
+    const XMLCh* activeName;
+    int nestingLevel;
 };

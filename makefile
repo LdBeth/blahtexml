@@ -48,7 +48,7 @@ SOURCES_XMLIN = $(SOURCES) \
 	Source/BlahtexXMLin/BlahtexFilter.cpp \
 	Source/BlahtexXMLin/SAX2Output.cpp \
 	Source/BlahtexXMLin/XercesString.cpp
-	
+
 HEADERS = \
 	Source/mainPng.h \
 	Source/md5.h \
@@ -99,7 +99,7 @@ CFLAGS = -O2
 
 VPATH = Source:Source/BlahtexCore:Source/BlahtexXMLin
 
-INCLUDES=-I. -ISource -ISource/BlahtexCore -ISource/BlahtexXMLin
+INCLUDES=-I. -ISource -ISource/BlahtexCore -ISource/BlahtexXMLin -I/opt/pkg/include
 
 $(BINDIR)/%.o:%.cpp
 	$(CXX) $(INCLUDES) $(CFLAGS) -c $< -o $@
@@ -123,7 +123,7 @@ blahtexml-linux:  $(BINDIR_XMLIN) $(OBJECTS_XMLIN)  $(HEADERS_XMLIN)
 	$(CXX) $(CFLAGS) -o blahtexml $(OBJECTS_XMLIN) -lxerces-c
 
 blahtexml-mac: $(BINDIR_XMLIN) $(OBJECTS_XMLIN)  $(HEADERS_XMLIN)
-	$(CXX) $(CFLAGS) -o blahtexml -liconv $(OBJECTS_XMLIN) -lxerces-c
+	$(CXX) $(CFLAGS) -L/opt/pkg/lib -o blahtexml -liconv $(OBJECTS_XMLIN) -lxerces-c
 
 clean:
 	rm -f blahtex $(OBJECTS) blahtexml $(OBJECTS_XMLIN)

@@ -37,7 +37,7 @@ using namespace std;
 extern wstring GetErrorMessage(const blahtex::Exception& e);
 
 BlahtexFilter::BlahtexFilter(SAX2XMLReader* parent, blahtex::Interface& anInterface)
-    : SAX2XMLFilterImpl(parent), interface(anInterface), numberOfErrors(0)
+  : SAX2XMLFilterImpl(parent), interface(anInterface), numberOfErrors(0), activeName(NULL), nestingLevel(0)
 {
 }
 
@@ -56,6 +56,11 @@ void BlahtexFilter::startElement(const XMLCh* const uri, const XMLCh* const loca
     static XercesString block("block");
     static XercesString error("error");
     static XercesString display("display");
+
+    if (activeName != NULL && (XMLString::compareIString(activeName, qname) == 0)) {
+        nestingLevel++;
+        return;
+    }
 
     bool blockMode = false;
     bool encloseInMathTag = false;
@@ -78,10 +83,13 @@ void BlahtexFilter::startElement(const XMLCh* const uri, const XMLCh* const loca
             XercesString MathMLnamespace("http://www.w3.org/1998/Math/MathML");
             XercesString unprefixedMath(L"math");
 
-            if ((!encloseInMathTag) || (XMLString::compareIString(MathMLnamespace.c_str(),uri) != 0)) {
+            if ((!encloseInMathTag) || (XMLString::compareIString(MathMLnamespace.c_str(),uri) != 0) ||
+                (XMLString::compareIString(unprefixedMath.c_str(),localname) != 0)) {
               AttributesImpl newAttributes(attributes);
               newAttributes.removeAttribute(eqAttrIndex);
               SAX2XMLFilterImpl::startElement(uri, localname, qname, newAttributes);
+            } else {
+              activeName = qname;
             }
 
             wstring MathMLprefix;
@@ -105,7 +113,7 @@ void BlahtexFilter::startElement(const XMLCh* const uri, const XMLCh* const loca
                     mathAttributes.addAttribute(display.c_str(), empty.c_str(), display.c_str(), block.c_str(), empty.c_str());
                 SAX2XMLFilterImpl::startElement(MathMLnamespace.c_str(), unprefixedMath.c_str(), prefixedMath.c_str(), mathAttributes);
             }
-            if (encloseInMathTag &&  annotateTeX) {
+            if (encloseInMathTag && annotateTeX) {
                 static XercesString unprefixedSemantics("semantics");
                 XercesString prefixedSemantics((MathMLprefix == L"") ? L"semantics" : (MathMLprefix + L":semantics"));
                 static XercesString unprefixedMrow("mrow");
@@ -150,6 +158,19 @@ void BlahtexFilter::startElement(const XMLCh* const uri, const XMLCh* const loca
     else {
         SAX2XMLFilterImpl::startElement(uri, localname, qname, attributes);
     }
+}
+
+void BlahtexFilter::endElement(const XMLCh* const uri, const XMLCh* const localname, const XMLCh* const qname)
+{
+  if (activeName != NULL && (XMLString::compareIString(activeName,qname) == 0)) {
+    if (nestingLevel > 0) {
+      nestingLevel--;
+    } else {
+      activeName = NULL;
+    }
+  } else {
+    SAX2XMLFilterImpl::endElement(uri, localname, qname);
+  }
 }
 
 void BlahtexFilter::startPrefixMapping(const XMLCh* const prefix, const XMLCh* const uri)

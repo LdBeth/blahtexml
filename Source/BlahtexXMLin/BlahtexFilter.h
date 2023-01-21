@@ -48,7 +48,6 @@ public:
     int getNumberOfErrors();
     void setDesiredMathMLPrefixType(PrefixType aPrefixType, const wstring& aPrefix);
     void setAnnotateTeX(bool anAnnotateTeX);
-    void setPngParams(const PngParams& aPngParams);
 protected:
     bool getMathMLprefix(wstring& prefix);
 };

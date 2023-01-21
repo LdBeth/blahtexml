@@ -200,8 +200,3 @@ void BlahtexFilter::setAnnotateTeX(bool anAnnotateTeX)
 {
     annotateTeX = anAnnotateTeX;
 }
-
-void BlahtexFilter::setPngParams(const PngParams& aPngParams)
-{
-    pngParams = aPngParams;
-}

@@ -18,7 +18,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "BlahtexCore/Interface.h"
 #include "UnicodeConverter.h"
-#include "mainPng.h"
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -153,21 +152,13 @@ void ShowUsage()
 " --mathml-encoding { raw | numeric | short | long }\n"
 " --other-encoding { raw | numeric }\n"
 "\n"
-" --png\n"
 " --displaymath\n"
 " --use-ucs-package\n"
 " --use-cjk-package\n"
 " --use-preview-package\n"
 " --japanese-font  fontname\n"
-" --shell-latex  command\n"
-" --shell-dvipng  command\n"
-" --temp-directory  directory\n"
-" --png-directory  directory\n"
-" --png-latex-preamble content\n"
-" --png-latex-before-math content\n"
 "\n"
 " --debug { parse | layout | purified }\n"
-" --keep-temp-files\n"
 " --throw-logic-error\n"
 " --print-error-messages\n"
 "\n"
@@ -210,7 +201,6 @@ void AddTrailingSlash(string& s)
         s += '/';
 }
 
-PngParams pngParams;
 #ifdef BLAHTEXML_USING_XERCES
 SAX2Output::Doctype outputDoctype = SAX2Output::DoctypeNone;
 string outputPublicID;
@@ -240,7 +230,6 @@ int batchXMLConversion(blahtex::Interface& interface)
     wstring __MathMLPrefix = _MathMLPrefix.convertTowstring();
     parser->setDesiredMathMLPrefixType(MathMLPrefixType, __MathMLPrefix);
     parser->setAnnotateTeX(annotateTeX);
-    parser->setPngParams(pngParams);
 
     int parserErrors = 0;
     int result = 0;
@@ -308,12 +297,6 @@ int main (int argc, char* const argv[]) {
         bool debugParseTree   = false;
         bool debugPurifiedTex = false;
 
-        pngParams.deleteTempFiles  = true;
-        pngParams.shellLatex    = "latex";
-        pngParams.shellDvipng   = "dvipng";
-        pngParams.tempDirectory = "./";
-        pngParams.pngDirectory  = "./";
-        
         bool displayStyle = false;
         
         const char *inputFilePath = NULL;
@@ -344,44 +327,6 @@ int main (int argc, char* const argv[]) {
 
             else if (arg == "--throw-logic-error")
                 throw logic_error("Aaarrrgggghhhh!");
-
-            else if (arg == "--shell-latex")
-            {
-                if (++i == argc)
-                    throw CommandLineException(
-                        "Missing string after \"--shell-latex\""
-                    );
-                pngParams.shellLatex = string(argv[i]);
-            }
-
-            else if (arg == "--shell-dvipng")
-            {
-                if (++i == argc)
-                    throw CommandLineException(
-                        "Missing string after \"--shell-dvipng\""
-                    );
-                pngParams.shellDvipng = string(argv[i]);
-            }
-
-            else if (arg == "--temp-directory")
-            {
-                if (++i == argc)
-                    throw CommandLineException(
-                        "Missing string after \"--temp-directory\""
-                    );
-                pngParams.tempDirectory = string(argv[i]);
-                AddTrailingSlash(pngParams.tempDirectory);
-            }
-
-            else if (arg == "--png-directory")
-            {
-                if (++i == argc)
-                    throw CommandLineException(
-                        "Missing string after \"--png-directory\""
-                    );
-                pngParams.pngDirectory = string(argv[i]);
-                AddTrailingSlash(pngParams.pngDirectory);
-            }
 
             else if (arg == "--displaymath") {
                 interface.mPurifiedTexOptions.mDisplayMath = true;
@@ -517,8 +462,6 @@ int main (int argc, char* const argv[]) {
                     );
             }
 
-            else if (arg == "--keep-temp-files")
-                pngParams.deleteTempFiles = false;
 #ifdef BLAHTEXML_USING_XERCES
             else if (arg == "--xmlin")
                 doXMLinput = true;
@@ -552,22 +495,6 @@ int main (int argc, char* const argv[]) {
             else if (arg == "--annotate-TeX")
                 annotateTeX = true;
 #endif
-            else if (arg == "--png-latex-preamble") {
-                if (++i == argc) {
-                    throw CommandLineException(
-                        "Missing string after \"--png-latex-preamble\""
-                    );
-                }
-                interface.mPurifiedTexOptions.mLaTeXPreamble = gUnicodeConverter.ConvertIn(string(argv[i]));
-            }
-            else if (arg == "--png-latex-before-math") {
-                if (++i == argc) {
-                    throw CommandLineException(
-                        "Missing string after \"--png-latex-before-math\""
-                    );
-                }
-                interface.mPurifiedTexOptions.mLaTeXBeforeMath = gUnicodeConverter.ConvertIn(string(argv[i]));
-            }
             else
                 throw CommandLineException(
                     "Unrecognised command line option \"" + arg + "\""

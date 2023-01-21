@@ -178,7 +178,6 @@ void ShowUsage()
 " --mathml-nsprefix-auto\n"
 " --mathml-nsprefix-none\n"
 " --mathml-nsprefix prefix\n"
-" --annotate-PNG\n"
 " --annotate-TeX\n"
 "\n"
 "\n"
@@ -218,19 +217,9 @@ string outputPublicID;
 string outputDTD;
 BlahtexFilter::PrefixType MathMLPrefixType = BlahtexFilter::PrefixAuto;
 string MathMLPrefix;
-bool annotatePNG, annotateTeX;
+bool annotateTeX;
 int batchXMLConversion(blahtex::Interface& interface)
 {
-    cerr << "\n"
-        "Blahtexml version " << gBlahtexVersion << "\n"
-        "Copyright (C) 2006, David Harvey\n"
-        "Copyright (C) 2007-2010, Gilles Van Assche\n"
-        "\n"
-        "This is free software; see the source "
-        "for copying conditions. There is NO\n"
-        "warranty; not even for MERCHANTABILITY "
-        "or FITNESS FOR A PARTICULAR PURPOSE.\n";
-    cerr << endl;
     try {
          XMLPlatformUtils::Initialize();
     }
@@ -250,7 +239,6 @@ int batchXMLConversion(blahtex::Interface& interface)
     XercesString _MathMLPrefix(MathMLPrefix.c_str());
     wstring __MathMLPrefix = _MathMLPrefix.convertTowstring();
     parser->setDesiredMathMLPrefixType(MathMLPrefixType, __MathMLPrefix);
-    parser->setAnnotatePNG(annotatePNG);
     parser->setAnnotateTeX(annotateTeX);
     parser->setPngParams(pngParams);
 
@@ -310,11 +298,9 @@ int main (int argc, char* const argv[]) {
 
         blahtex::Interface interface;
 
-        bool doPng    = false;
         bool doMathml = false;
 #ifdef BLAHTEXML_USING_XERCES
         bool doXMLinput = false;
-        annotatePNG = false;
         annotateTeX = false;
 #endif
 
@@ -456,9 +442,6 @@ int main (int argc, char* const argv[]) {
             else if (arg == "--texvc-compatible-commands")
                 interface.mTexvcCompatibility = true;
 
-            else if (arg == "--png")
-                doPng = true;
-
             else if (arg == "--mathml")
                 doMathml = true;
 
@@ -566,8 +549,6 @@ int main (int argc, char* const argv[]) {
                 if (++i == argc) throw CommandLineException("Missing string after \"--mathml-nsprefix\"");
                 MathMLPrefix = argv[i];
             }
-            else if (arg == "--annotate-PNG")
-                annotatePNG = true;
             else if (arg == "--annotate-TeX")
                 annotateTeX = true;
 #endif
@@ -670,7 +651,7 @@ int main (int argc, char* const argv[]) {
             }
 
             // Generate purified TeX if required.
-            if (doPng || debugPurifiedTex)
+            if (debugPurifiedTex)
             {
                 // This stream is where we build the PNG output block:
                 wostringstream pngOutput;
@@ -686,28 +667,6 @@ int main (int argc, char* const argv[]) {
                         pngOutput << L"\n=== END PURIFIED TEX ===\n\n";
                     }
 
-                    // Make the system calls to generate the PNG image
-                    // if requested.
-                    if (doPng)
-                    {
-                        PngInfo info = MakePngFile(purifiedTex, "", pngParams);
-
-                        // The height and depth measurements are only
-                        // valid if the "preview" package is used:
-                        if (interface.mPurifiedTexOptions.mAllowPreview
-                            && info.mDimensionsValid
-                        )
-                        {
-                            pngOutput << L"<height>"
-                                << info.mHeight << L"</height>\n";
-                            pngOutput << L"<depth>"
-                                << info.mDepth << L"</depth>\n";
-                        }
-
-                        pngOutput << L"<md5>"
-                            << gUnicodeConverter.ConvertIn(info.mMd5)
-                            << L"</md5>\n";
-                    }
                 }
 
                 // Catching errors that occurred during PNG generation:

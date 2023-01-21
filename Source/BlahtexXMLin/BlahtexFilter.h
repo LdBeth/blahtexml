@@ -36,7 +36,7 @@ protected:
     int numberOfErrors;
     PrefixType desiredMathMLPrefixType;
     wstring desiredMathMLPrefix;
-    bool annotatePNG, annotateTeX;
+    bool annotateTeX;
     PngParams pngParams;
 public:
     BlahtexFilter(SAX2XMLReader* parent, blahtex::Interface& anInterface);
@@ -47,7 +47,6 @@ public:
     virtual void endPrefixMapping(const XMLCh* const prefix);
     int getNumberOfErrors();
     void setDesiredMathMLPrefixType(PrefixType aPrefixType, const wstring& aPrefix);
-    void setAnnotatePNG(bool anAnnotatePNG);
     void setAnnotateTeX(bool anAnnotateTeX);
     void setPngParams(const PngParams& aPngParams);
 protected:

@@ -64,7 +64,7 @@ MathmlEnvironment::MathmlEnvironment(
 
 bool operator== (const MathmlEnvironment& x, const MathmlEnvironment& y)
 {
-    return 
+    return
         (x.mDisplayStyle == y.mDisplayStyle) &&
         (x.mScriptLevel == y.mScriptLevel) &&
         (x.mColour == y.mColour);
@@ -116,7 +116,7 @@ MathmlNode* GetCore(MathmlNode* node)
 
     if (!node)
         return NULL;
-    
+
     switch (node->mType)
     {
         case MathmlNode::cTypeMsub:
@@ -126,7 +126,7 @@ MathmlNode* GetCore(MathmlNode* node)
         case MathmlNode::cTypeMover:
         case MathmlNode::cTypeMunderover:
             return GetCore(node->mChildren.front());
-        
+
         default:
             return node;
     }
@@ -215,7 +215,7 @@ auto_ptr<MathmlNode> AdjustMathmlEnvironment(
                 node->mAttributes[MathmlNode::cAttributeMathcolor] =
                     FormatColour(targetEnvironment.mColour);
                 break;
-                
+
             default:
                 newNode->mAttributes[MathmlNode::cAttributeMathcolor] =
                     FormatColour(targetEnvironment.mColour);
@@ -235,7 +235,7 @@ auto_ptr<MathmlNode> AdjustMathmlEnvironment(
         newNode->mChildren.swap(node->mChildren);
     else
         newNode->mChildren.push_back(node.release());
-    
+
     return newNode;
 }
 
@@ -251,15 +251,22 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
     // keep a list of MathmlEnvironments corresponding to the desired
     // environment for each node. Then, do a second pass inserting <mstyle>
     // nodes to implement those desired environments.
-    
+
     auto_ptr<MathmlNode> outputNode(new MathmlNode(MathmlNode::cTypeMrow));
     list<MathmlNode*>& outputList = outputNode->mChildren;
-        
+
     IncrementNodeCount(nodeCount);
-    
-    bool isSingleSpace = (outputList.front() == outputList.back());
-    if (mChildren.empty())
-        return outputNode;
+
+    if (mChildren.empty()) {
+      return outputNode;
+    } else if (mChildren.front() == mChildren.back()) {
+      Node* node = mChildren.front();
+      Space* sourceAsSpace = dynamic_cast<Space*>(node);
+      if (sourceAsSpace) {
+        if (sourceAsSpace->mWidth == 0)
+          return outputNode;
+        }
+    }
 
     vector<MathmlEnvironment> environments;
 
@@ -271,7 +278,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
     {
         MathmlNode* previousTarget =
             outputList.empty() ? NULL : outputList.back();
-    
+
         int spaceWidth = 0;
         bool isUserRequested = false;
 
@@ -284,7 +291,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
             isUserRequested = sourceAsSpace->mIsUserRequested;
             source++;
         }
-        
+
         MathmlNode* currentTarget = NULL;
         if (source != mChildren.end())
         {
@@ -299,10 +306,10 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
                     nodeCount
                 ).release()
             );
-            
+
             currentTarget = outputList.back();
         }
-        
+
         // Now decide about whether to insert markup for the
         // space between currentNode and previousNode.
 
@@ -322,7 +329,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
         if (
             options.mSpacingControl
                 == MathmlOptions::cSpacingControlStrict
-            || isUserRequested || isSingleSpace
+            || isUserRequested
         )
             doSpace = true;
 
@@ -335,7 +342,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
             // spacing decisions, without being *too* pushy.
 
             // This section of code is likely to change a LOT.
-            
+
             // Note: I scratched most of this as of blahtex 0.4.4....
             // it was getting really ugly and I need to think of another
             // way to do it
@@ -377,10 +384,6 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
                     [MathmlNode::cAttributeLspace] = widthAsString;
             else
             {
-
-              if (spaceWidth == 0 && isSingleSpace) {
-                return outputNode;
-              }
                 // FIX: this <mi>-specific stuff is a nasty hack because
                 // Firefox likes to mess around with the space between
                 // adjacent <mi> nodes in some situations.
@@ -436,17 +439,17 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
     {
         if (outputPtr != outputList.begin())
             outputPtr--;
-        
+
         if (environment == environments.rbegin())
             continue;
-        
+
         if (!(environment[-1] == environment[0]))
         {
             list<MathmlNode*>::iterator previousOutputPtr = outputPtr;
             previousOutputPtr++;
-            
+
             auto_ptr<MathmlNode> enclosedNode;
-            
+
             if (--outputList.end() == previousOutputPtr)
             {
                 // If outputPtr is already the last node, we don't need
@@ -464,7 +467,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
                     outputList.end()
                 );
             }
-            
+
             outputList.push_back(
                 AdjustMathmlEnvironment(
                     enclosedNode,
@@ -474,7 +477,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
             );
         }
     }
-    
+
     // If the result is an <mrow> with a single child, just return the
     // child by itself.
     // (We don't use list::size() here because that's O(n) :-))
@@ -559,7 +562,7 @@ auto_ptr<MathmlNode> SymbolIdentifier::BuildMathmlTree(
                 "Unexpected string length in "
                 "SymbolIdentifier::BuildMathmlTree()"
             );
-        
+
         wchar_t replacement = 0;
 
         // These hold the explicit characters for "A" and "a" in the
@@ -798,9 +801,9 @@ auto_ptr<MathmlNode> Sqrt::BuildMathmlTree(
         mChild->BuildMathmlTree(
             options, desiredEnvironment, nodeCount
         );
-    
+
     auto_ptr<MathmlNode> node;
-    
+
     if (child->mType == MathmlNode::cTypeMrow)
     {
         // This removes redundant <mrow>s, i.e. things like
@@ -847,7 +850,7 @@ auto_ptr<MathmlNode> Root::BuildMathmlTree(
             nodeCount
         ).release()
     );
-    
+
     return AdjustMathmlEnvironment(
         node, inheritedEnvironment, desiredEnvironment
     );
@@ -1112,14 +1115,14 @@ auto_ptr<MathmlNode> Table::BuildMathmlTree(
         for (int i = 1; i < tableWidth; i++)
             alignString += (i % 2) ? L" left" : L" right";
         node->mAttributes[MathmlNode::cAttributeColumnalign] = alignString;
-        
+
         wstring spacingString = L"0.2em";
         for (int i = 2; i < tableWidth; i++)
             spacingString += (i % 2) ? L" 0.2em" : L" 1em";
         node->mAttributes[MathmlNode::cAttributeColumnspacing] =
             spacingString;
     }
-    
+
     // FIX: need to test this for Firefox whenever they get that bug fixed
     // (mozilla bug 330964)
     if (mRowSpacing == cRowSpacingTight)
@@ -1144,7 +1147,7 @@ auto_ptr<MathmlNode> Table::BuildMathmlTree(
                 new MathmlNode(MathmlNode::cTypeMtd)
             );
             IncrementNodeCount(nodeCount);
-        
+
             auto_ptr<MathmlNode> child =
                 (*inEntry)->BuildMathmlTree(
                     options, MathmlEnvironment(mStyle, mColour), nodeCount
@@ -1290,21 +1293,21 @@ void Row::Optimise()
 {
     list<Node*>::iterator lastSpace = mChildren.end();
     list<Node*>::iterator lastNonSpace = mChildren.end();
-    
+
     // Throughout this loop, we ensure that:
     // * lastNonSpace points to the most recently seen non-Space node,
     //   or mChildren.end() if none have yet been seen;
     // * lastSpace points to the most recently seen Space node *following*
     //   lastNonSpace, or just the most recently seen Space node if
     //   lastNonSpace == mChildren.end().
-    
+
     for (list<Node*>::iterator
         current = mChildren.begin(); current != mChildren.end(); ++current
     )
     {
         // Recurse:
         (*current)->Optimise();
-        
+
         Space* currentAsSpace = dynamic_cast<Space*>(*current);
         if (currentAsSpace)
         {
@@ -1333,7 +1336,7 @@ void Row::Optimise()
             {
                 // We have found two non-Space nodes with zero space between
                 // them. Now determine whether we want to merge them.
-                
+
                 // The first special case is if the first symbol is a
                 // "\not" command, and we try to come up with a MathML
                 // character which represents the negation of the following
@@ -1358,7 +1361,7 @@ void Row::Optimise()
 
                     if (lastSpace != mChildren.end())
                         mChildren.erase(lastSpace);
-                    
+
                     currentAsOperator->mText = negationLookup->second;
                     mChildren.erase(lastNonSpace);
                 }
@@ -1375,7 +1378,7 @@ void Row::Optimise()
                             dynamic_cast<Scripts*>(currentCore))
                     )
                         currentCore = currentCoreAsScripts->mBase.get();
-                    
+
                     // Check candidates are Symbols and their fonts, styles,
                     // colours match, and then either:
                     // * both are SymbolNumber, or
@@ -1384,7 +1387,7 @@ void Row::Optimise()
                     //   normal (this case covers things like <mi>sin</mi>)
                     //   and are made of plain (non-accented) Latin letters
                     //   (to avoid merging \hbar and \Phi for instance)
-                    
+
                     Symbol* currentCoreAsSymbol =
                         dynamic_cast<Symbol*>(currentCore);
                     Symbol* lastNonSpaceAsSymbol =
@@ -1432,7 +1435,7 @@ void Row::Optimise()
                         // Let's MERGE.
                         // (We do this a slightly odd way to maintain O(n)
                         // complexity.)
-                        
+
                         if (lastSpace != mChildren.end())
                             mChildren.erase(lastSpace);
 
@@ -1442,12 +1445,12 @@ void Row::Optimise()
                         lastNonSpaceAsSymbol->mText.swap(
                             currentCoreAsSymbol->mText
                         );
-                        
+
                         mChildren.erase(lastNonSpace);
                     }
                 }
             }
-            
+
             lastNonSpace = current;
             lastSpace = mChildren.end();
         }

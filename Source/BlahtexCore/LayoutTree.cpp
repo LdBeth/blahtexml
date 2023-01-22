@@ -257,6 +257,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
         
     IncrementNodeCount(nodeCount);
     
+    bool isSingleSpace = (outputList.front() == outputList.back());
     if (mChildren.empty())
         return outputNode;
 
@@ -321,7 +322,7 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
         if (
             options.mSpacingControl
                 == MathmlOptions::cSpacingControlStrict
-            || isUserRequested
+            || isUserRequested || isSingleSpace
         )
             doSpace = true;
 
@@ -376,6 +377,10 @@ auto_ptr<MathmlNode> Row::BuildMathmlTree(
                     [MathmlNode::cAttributeLspace] = widthAsString;
             else
             {
+
+              if (spaceWidth == 0 && isSingleSpace) {
+                return outputNode;
+              }
                 // FIX: this <mi>-specific stuff is a nasty hack because
                 // Firefox likes to mess around with the space between
                 // adjacent <mi> nodes in some situations.

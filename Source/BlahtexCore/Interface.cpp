@@ -52,7 +52,6 @@ wstring Interface::GetPurifiedTexOnly()
 #ifdef BLAHTEXML_USING_XERCES
 void Interface::PrintAsSAX2(ContentHandler& sax, const wstring& prefix, bool ignoreFirstmrow) const
 {
-    wostringstream output;
     auto_ptr<MathmlNode> root = mManager->GenerateMathml(mMathmlOptions);
     root->PrintAsSAX2(sax, prefix, ignoreFirstmrow);
 }

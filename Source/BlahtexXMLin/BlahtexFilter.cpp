@@ -109,7 +109,7 @@ void BlahtexFilter::startElement(const XMLCh* const uri, const XMLCh* const loca
                     mathAttributes.addAttribute(display.c_str(), empty.c_str(), display.c_str(), block.c_str(), empty.c_str());
                 SAX2XMLFilterImpl::startElement(MathMLnamespace.c_str(), unprefixedMath.c_str(), prefixedMath.c_str(), mathAttributes);
             }
-            if (encloseInMathTag && annotateTeX) {
+            if ((encloseInMathTag || isMathML) && annotateTeX) {
                 static XercesString unprefixedSemantics("semantics");
                 XercesString prefixedSemantics((MathMLprefix == L"") ? L"semantics" : (MathMLprefix + L":semantics"));
                 static XercesString unprefixedMrow("mrow");
